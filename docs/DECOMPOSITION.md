@@ -2,7 +2,7 @@
 
 Components are taken from the [Model Factory architecture](img/model-factory.drawio.svg). Each owner is the top non-bot committer to the matching `gears/` folder in `gears-rust`. `TBD (new)` means the component has no gear yet.
 
-Priorities: `p1` - needed for the first release (manage models, serve the inference API); `p2` - needed for production at scale; `p3` - later.
+Priorities: `p0` - demo in Q4'2026; `p1` - needed for the first release (manage models, serve the inference API); `p2` - needed for production at scale; `p3` - later.
 
 ![Model Factory](img/model-factory.drawio.svg)
 
@@ -10,11 +10,11 @@ Priorities: `p1` - needed for the first release (manage models, serve the infere
 
 ## Nginx
 
-- Owner: A.Plakunov (Envoy gateway API)
+- Owner: DevOps (Envoy gateway API)
 
-- [ ] `p1` - #{ID} - Expose the OpenAI-compatible inference routes (`/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/models`) on the single ingress and route them to model-gateway.
-- [ ] `p1` - #{ID} - Pass SSE streams from model-gateway to the client without buffering, with keep-alive pings and correct handling of client disconnects.
-- [ ] `p1` - #{ID} - Allow large request bodies on inference routes (long prompts, base64 images) with a configurable size limit per route.
+- [ ] `p0` - #{ID} - Expose the OpenAI-compatible inference routes (`/v1/responses`, `/v1/chat/completions`, `/v1/embeddings`, `/v1/models`) on the single ingress and route them to model-gateway.
+- [ ] `p0` - #{ID} - Pass SSE streams from model-gateway to the client without buffering, with keep-alive pings and correct handling of client disconnects.
+- [ ] `p0` - #{ID} - Allow large request bodies on inference routes (long prompts, base64 images) with a configurable size limit per route.
 
 # BSS
 
@@ -40,7 +40,7 @@ Priorities: `p1` - needed for the first release (manage models, serve the infere
 
 - Owner: TBD (new)
 
-- [ ] `p1` - #{ID} - Simple/temporary implementation in Model Factory backend and pushing them to quota-enforcement.
+- [ ] `p0` - #{ID} - Simple/temporary implementation in Model Factory backend and pushing them to quota-enforcement.
 
 ### Standalone Quota management gear
 
@@ -105,32 +105,44 @@ Priorities: `p1` - needed for the first release (manage models, serve the infere
 
 - Owner: Alex T (`gears/system/license-enforcement`)
 
-- [ ] `p1` - #{ID} - Implement the license-enforcement gear (docs exist, no code yet): check that a tenant has a valid grant before a model call.
-- [ ] `p1` - #{ID} - Support seat grants for chat users and per-model grants for premium models.
+- [ ] `p0` - #{ID} - Implement the license-enforcement gear (docs exist, no code yet): check that a tenant has a valid grant before a model call.
+- [ ] `p0` - #{ID} - Support seat grants for chat users and per-model grants for premium models.
+- [ ] `p2` - #{ID} - Add resource groups support.
 
 ## quota-enforcement
 
 - Owner: Vladan Gojgic (`gears/system/quota-enforcement`)
 
-- [ ] `p1` - #{ID} - Add AI-credit quota types for model usage: reserve an estimated cost before the call and commit the real cost after the call.
-- [ ] `p1` - #{ID} - Add token quota types (input + output tokens per period) per tenant, user and API key.
+- [ ] `p0` - #{ID} - Add AI-credit quota types for model usage: reserve an estimated cost before the call and commit the real cost after the call.
+- [ ] `p0` - #{ID} - Add token quota types (input + output tokens per period) per tenant, user and API key.
+- [ ] `p2` - #{ID} - Add resource groups support.
 - [ ] `p3` - #{ID} - Add concurrent-request limits per tenant for expensive models (for example max 5 parallel requests to a 70B model).
 
 ## usage-collector
 
 - Owner: capybutler (`gears/system/usage-collector`)
 
-- [ ] `p1` - #{ID} - Add usage record types for model calls: tenant, user, API key, model id, input / output / cached tokens, cost in AI credits, capabilities (reasoning effort, fast/normal), status.
-- [ ] `p1` - #{ID} - Add usage records for GPU time of deployed models (GPU type, count, hours) per tenant and deployment.
+- [ ] `p0` - #{ID} - Add usage record types for model calls: tenant, user, API key, model id, input / output / cached tokens, cost in AI credits, capabilities (reasoning effort, fast/normal), status.
+- [ ] `p1` - #{ID} - Add usage records for GPU deployed models (GPU type, count, hours) per tenant and deployment.
 - [ ] `p2` - #{ID} - Provide a usage query API grouped by model, tenant, user, API key and day, for the web and admin consoles.
 
-## hw-usage-collector
+
+## resource-groups
+
+- Owner: ffedorof (`gears/system/resource-groups`)
+
+???
+
+## hw-usage-reporter
 
 - Owner: TBD (`TBD`)
+
+- [ ] `p1` - #{ID} - Collect GPU usage records for deployed models (GPU type, count, hours) per tenant and deployment.
 
 <!--
 Need to check with VZ team
 -->
+
 
 ## policy-engine
 
@@ -161,22 +173,24 @@ Need to check with Virtuozzo team. Do we need it all in p1?
 
 - Owner: pr0tey (`gears/llm-gateway`)
 
-- [ ] `p1` - #{ID} - Implement Open Responses API, normalize errors and completion statuses
-- [ ] `p1` - #{ID} - Add pass-through APIs for OpenAI and Anthropic APIs.
-- [ ] `p1` - #{ID} - Resolve each request through model-registry (or model-router), fetch the provider key from credstore, and call the provider plugin through oagw.
-- [ ] `p1` - #{ID} - Run the request pipeline hooks in a fixed order: authn, tenant, authz, license, quota reserve, guardrails, provider call, quota commit, usage record.
-- [ ] `p1` - #{ID} - Implement the embeddings API for all plugins that support it.
-- [ ] `p1` - #{ID} - Add retries for provider calls that fail with transient errors.
-- [ ] `p1` - #{ID} - Emit prometheus metrics per model (requests, errors, latency, time to first token, tokens per second).
+- [ ] `p0` - #{ID} - Implement Open Responses API, normalize errors and completion statuses
+- [ ] `p0` - #{ID} - Add pass-through APIs for OpenAI and Anthropic APIs.
+- [ ] `p0` - #{ID} - Finalize pass-through design - ensure it's secure and doesn't expose other tenants documents.
+- [ ] `p0` - #{ID} - Resolve each request through model-registry (or model-router), fetch the provider key from credstore, and call the provider plugin through oagw.
+- [ ] `p0` - #{ID} - Run the request pipeline hooks in a fixed order: authn, tenant, authz, license, quota reserve, guardrails, provider call, quota commit, usage record.
+- [ ] `p0` - #{ID} - Implement the embeddings API for all plugins that support it.
+- [ ] `p0` - #{ID} - Add retries for provider calls that fail with transient errors.
+- [ ] `p0` - #{ID} - Emit prometheus metrics per model (requests, errors, latency, time to first token, tokens per second).
+- [ ] `p0` - #{ID} - Stream prompt and response metadata for model calls to LangFuse, with a retention period per tenant.
 - [ ] `p2` - #{ID} - Add fallback/switch/balancing to the next model from model-router when the provider returns a retriable error (timeouts, 429, 5xx) before any output was streamed.
 - [ ] `p2` - #{ID} - Support async jobs and batch requests with results stored in file-storage.
 - [ ] `p3` - #{ID} - Support image generation, text-to-speech and speech-to-text APIs.
 
 Plugin:
 
-- [ ] `p1` - #{ID} - vLLM plugin, Owner: TBD (new)
-- [ ] `p1` - #{ID} - OpenAI plugin, Owner: TBD (new)
-- [ ] `p1` - #{ID} - Anthropic plugin, Owner: TBD (new)
+- [ ] `p0` - #{ID} - vLLM plugin, Owner: TBD (new)
+- [ ] `p0` - #{ID} - OpenAI plugin, Owner: TBD (new)
+- [ ] `p0` - #{ID} - Anthropic plugin, Owner: TBD (new)
 - [ ] `p2` - #{ID} - Azure OpenAI plugin, Owner: TBD (new)
 - [ ] `p2` - #{ID} - Gemini plugin, Owner: TBD (new)
 - [ ] `p2` - #{ID} - Jev plugin, Owner: TBD (new)
@@ -185,44 +199,48 @@ Plugin:
 
 - Owner: TBD (new)
 
+<!-- Need to decide where we store tokens  -->
 - [ ] `p1` - #{ID} - Manage LLM gateway API
+- [ ] `p2` - #{ID} - BYOK support
 
 ## tenant-resolver
 
-- Owner: Artifizer (`gears/system/tenant-resolver`)
+- Owner: aviator5 (`gears/system/tenant-resolver`)
 
-- [ ] `p1` - #{ID} - Resolve the tenant and its ancestors from an API key in under a few milliseconds (cached), so model-gateway and model-registry can build the effective model catalog per request.
+- [x] `p0` - #{ID} - Resolve the tenant and its ancestors from an API key in under a few milliseconds (cached), so model-gateway and model-registry can build the effective model catalog per request.
 
 ## license-resolver
 
 - Owner: Alex T (`gears/system/license-resolver`)
 
-- [ ] `p1` - #{ID} - Answer "is this tenant / user licensed to call this model?" with a cached, low-latency call from the model-gateway pipeline.
+- [x] `p0` - #{ID} - Answer "is this tenant / user licensed to call this model?" with a cached, low-latency call from the model-gateway pipeline.
 
-## quota-resolver
+## quota-enforcer-sdk
 
 - Owner: TBD (new)
 
-- [ ] `p1` - #{ID} - Create the quota-resolver hook for model-gateway: reserve the estimated AI-credit cost before the call, commit the real cost after it, and release the reservation on error or client disconnect.
-- [ ] `p1` - #{ID} - Return a clear `quota_exceeded` error with the quota name and reset time when a request is over the limit.
+- [ ] `p0` - #{ID} - Create the quota-resolver hook for model-gateway: reserve the estimated AI-credit cost before the call, commit the real cost after it, and release the reservation on error or client disconnect.
+- [ ] `p0` - #{ID} - Return a clear `quota_exceeded` error with the quota name and reset time when a request is over the limit.
 
 ## usage-collector SDK
 
 - Owner: CommName (`gears/system/usage-collector`)
 
-- [ ] `p1` - #{ID} - Add an SDK helper for model-gateway that sends one usage record per model call with at-least-once delivery, also for streams that end early.
+- [x] `p0` - #{ID} - Add an SDK helper for model-gateway that sends one usage record per model call with at-least-once delivery, also for streams that end early.
+- [ ] `p0`- #{ID} - Add remote usage collection support for model-gateway.
 
 ## authn-resolver
 
-- Owner: Artifizer (`gears/system/authn-resolver`)
+- Owner: aviator5 (`gears/system/authn-resolver`)
 
-- [ ] `p1` - #{ID} - Validate inference API keys (hashed lookup, expiry, revocation) and return the user, tenant and key scopes (allowed models).
+- [ ] `p0` - #{ID} - Validate API keys (hashed lookup, expiry, revocation) and return the user, tenant and key scopes (allowed models).
 
 ## authz-resolver
 
-- Owner: MikeFalcon77 / Artifizer (`gears/system/authz-resolver`)
+- Owner: aviator5 (`gears/system/authz-resolver`)
 
-- [ ] `p1` - #{ID} - Add the `model:evaluate` permission check per model and the model-registry / Model Ops management permissions to the PEP / PDP flow.
+- [x] `p0` - #{ID} - Add the `model:evaluate` permission check per model and the model-registry / Model Ops management permissions to the PEP / PDP flow.
+- [ ] `p0` - #{ID} - Need to register two roles - `model:register` and `model:use`
 
 ## guardrails
 
@@ -242,8 +260,8 @@ Plugin:
 
 - Owner: Dmitry Matveev (`gears/chat-engine`)
 
-- [ ] `p1` - #{ID} - Call models only through model-gateway and list models through model-registry, so chat uses the same access, quota and usage rules as the API.
-- [ ] `p2` - #{ID} - Let users pick a model, or "auto", per chat session; "auto" uses model-router.
+- [ ] `p3` - #{ID} - Call models only through model-gateway and list models through model-registry, so chat uses the same access, quota and usage rules as the API.
+- [ ] `p3` - #{ID} - Let users pick a model, or "auto", per chat session; "auto" uses model-router.
 
 ## file-downloader
 
@@ -255,23 +273,23 @@ Plugin:
 
 - Owner: TBD (new)
 
-- [ ] `p1` - #{ID} - Create the model-router gear with model aliases (for example `glm-latest` -> `vllm::glm-4.6`), so clients keep working when a model is upgraded or removed.
-- [ ] `p1` - #{ID} - Support a fallback list per alias: when the first model is disabled, unhealthy or over quota, route to the next one.
-- [ ] `p2` - #{ID} - Route by request features: pick a model that supports the needed capabilities (tools, vision, context size) and is cheapest.
-- [ ] `p2` - #{ID} - Support weighted routing between deployments of the same model (canary, A/B test).
-- [ ] `p3` - #{ID} - Route by prompt ("prompt -> best model") using a small classifier model.
+- [ ] `p3` - #{ID} - Semantic router by prompt ("prompt -> best model") using a small classifier model.
 
 ## model-registry
 
 - Owner: Qilin101 (`gears/model-registry`)
 
-- [ ] `p1` - #{ID} - Implement the model-registry service (only the SDK exists today): provider and model CRUD, sharing, shadowing, approval, effective catalog and resolve API, as defined in the model-registry PRD.
-- [ ] `p1` - #{ID} - Register self-hosted models with a link to their deployment: when model-deployer creates or removes an endpoint, the model `base_url` and status are updated.
-- [ ] `p1` - #{ID} - Store model lifecycle status (registered, downloading, scanning, benchmarking, ready, deployed, deprecated, retired) and show it in the admin console.
-- [ ] `p1` - #{ID} - Store model metadata from the model card: source (Hugging Face repo and revision), license, size, quantization, context window, capabilities.
+- [ ] `p0` - #{ID} - Create the model-router gear with model aliases (for example `glm-latest` -> `vllm::glm-4.6`), so clients keep working when a model is upgraded or removed.
+- [ ] `p0` - #{ID} - Implement the model-registry service (only the SDK exists today): provider and model CRUD, sharing, shadowing, approval, effective catalog and resolve API, as defined in the model-registry PRD.
+- [ ] `p0` - #{ID} - Register self-hosted models with a link to their deployment: when model-deployer creates or removes an endpoint, the model `base_url` and status are updated.
+- [ ] `p0` - #{ID} - Store model lifecycle status (registered, downloading, scanning, benchmarking, ready, deployed, deprecated, retired) and show it in the admin console.
+- [ ] `p0` - #{ID} - Store model metadata from the model card: source (Hugging Face repo and revision), license, size, quantization, context window, capabilities.
+- [ ] `p0` - #{ID} - Support Redis through `cluster` gear for caching.
 - [ ] `p2` - #{ID} - Support model deprecation with a retirement date and a replacement model, and warn callers of deprecated models in the response headers.
 - [ ] `p2` - #{ID} - Store benchmark and scan results per model version and show them in the catalog.
 - [ ] `p2` - #{ID} - Record a change audit for every provider and model change (create, update, delete, approve, share).
+- [ ] `p2` - #{ID} - Route by request features: pick a model that supports the needed capabilities (tools, vision, context size) and is cheapest.
+- [ ] `p2` - #{ID} - Support weighted routing between deployments of the same model (canary, A/B test).
 
 ## MCP registry
 
@@ -293,27 +311,30 @@ Plugin:
 
 - Owner: TBD (new)
 
-- [ ] `p1` - #{ID} - Create the Model Factory backend gear with an admin API for the full model lifecycle: register, download, scan, benchmark, approve, deploy, promote and retire a model.
-- [ ] `p1` - #{ID} - Run each lifecycle step as a task-engine job and show its progress, logs and result in the admin console.
-- [ ] `p1` - #{ID} - Manage deployments: list, scale (replicas, GPU count), restart and remove model endpoints per tenant.
-- [ ] `p1` - #{ID} - Let admins set which tenants are allowed to use each deployed model (writes the sharing and approval settings in model-registry).
-- [ ] `p1` - #{ID} - Map models to subscription licenses and create licenses if needed.
+- [ ] `p0` - #{ID} - Let admins set which tenants are allowed to use each deployed model (writes the sharing and approval settings in model-registry).
+- [ ] `p0` - #{ID} - Map models to subscription licenses and create licenses if needed.
+- [ ] `p1` - #{ID} - Run each lifecycle step (register, download, scan, benchmark, approve, deploy, promote, retire) as a task-engine job/pipeline.
 - [ ] `p2` - #{ID} - Promote a model version from staging to production after benchmarks pass, and switch the model-router alias to it.
 - [ ] `p2` - #{ID} - Price and AI tokens configurator for self-hosted and third-party models.
-- [ ] `p2` - #{ID} - Compute the cost of a self-hosted model call from the token prices in the model settings.
 - [ ] `p2` - #{ID} - Show a per-model dashboard: requests, latency, errors, GPU usage and cost.
+- [ ] `p3` - #{ID} - Compute the cost of a self-hosted model call from the token prices in the model settings.
 
 ## model-scanner
 
 - Owner: TBD (new)
 
+<!-- NOTE: p0 - the scanner supposed to be fully 'manual' and ad-hoc, ML engineers should just provide the list of approved models -->
+
 - [ ] `p1` - #{ID} - Create the model-scanner gear that checks downloaded model files for unsafe formats (pickle) and known malware before deployment, and blocks unsafe models.
 - [ ] `p1` - #{ID} - Read the model license from the model card and store it in model-registry; flag licenses that do not allow commercial use.
-- [ ] `p2` - #{ID} - Check model files against the expected checksums of the source revision to find changed files or backdoors.
+- [ ] `p1` - #{ID} - Check model country origin.
+- [ ] `p3` - #{ID} - Check model files against the expected checksums of the source revision to find changed files or backdoors.
 
 ## model-benchmark
 
 - Owner: TBD (new)
+
+<!-- NOTE: p0 - the benchmark supposed to be fully 'manual' and ad-hoc, ML engineers should just provide the list of approved models -->
 
 - [ ] `p1` - #{ID} - Create the model-benchmark gear that starts a temporary vLLM deployment, runs a performance test (throughput, time to first token, latency at N parallel users) and removes the deployment.
 - [ ] `p2` - #{ID} - Run quality benchmarks (for example MMLU, GSM8K, a tenant test set) and compare the result with the current production model.
@@ -324,7 +345,10 @@ Plugin:
 
 - Owner: TBD (new)
 
+<!-- NOTE: p0 - deploy is done by DevOps team manually, based on input from ML team, status reported to graph-storage -->
+
 - [ ] `p1` - #{ID} - Create the model-deployer gear that deploys a model to the GPU pool as a vLLM endpoint through IRM / Kubernetes + Helm, with GPU type, GPU count and vLLM settings.
+- [ ] `p1` - #{ID} - Manage deployments: list, scale (replicas, GPU count), restart and remove model endpoints per tenant.
 - [ ] `p1` - #{ID} - Track deployment status (pending, starting, ready, failed, stopped), run health checks, and update the endpoint and status in model-registry.
 - [ ] `p1` - #{ID} - Register the endpoint in oagw as an approved destination, and set its auth (API key in credstore or network-only access).
 - [ ] `p2` - #{ID} - Autoscale replicas by load (queue length, GPU usage) and scale to zero for rarely used models.
@@ -335,6 +359,8 @@ Plugin:
 
 - Owner: TBD (new)
 
+<!-- NOTE: p0 - download is done by DevOps team manually, based on input from ML team, status reported to graph-storage -->
+
 - [ ] `p1` - #{ID} - Create the model-downloader gear that downloads a model from Hugging Face (or the internal mirror) by repo and revision and stores it in object storage.
 - [ ] `p1` - #{ID} - Make downloads retriable and resumable, check file checksums, and report progress.
 - [ ] `p2` - #{ID} - Support private Hugging Face repos with a token from credstore.
@@ -344,43 +370,51 @@ Plugin:
 
 ## oagw
 
-- Owner: Artifizer (`gears/system/oagw`)
+- Owner: striped-zebra (`gears/system/oagw`)
 
-- [ ] `p1` - #{ID} - Support long-lived streaming responses (SSE) from providers and vLLM endpoints without timeouts or buffering.
+- [ ] `p0` - #{ID} - Support long-lived streaming responses (SSE) from providers and vLLM endpoints without timeouts or buffering.
 - [ ] `p1` - #{ID} - Let model-deployer add and remove approved destinations for vLLM endpoints at runtime.
 - [ ] `p2` - #{ID} - Add per-destination circuit breakers, so model-router can skip a failing provider.
 
 ## credstore
 
-- Owner: Roland From (`gears/credstore`)
+- Owner: Roland (`gears/credstore`)
 
-- [ ] `p1` - #{ID} - Store provider API keys (OpenAI, Anthropic, Azure, Gemini, Hugging Face) per tenant and share them down the tenant tree, referenced from model-registry.
+- [ ] `p0` - #{ID} - Store provider API keys (OpenAI, Anthropic, Azure, Gemini, Hugging Face) per tenant and share them down the tenant tree, referenced from model-registry.
+- [ ] `p0` - #{ID} - Store credentials in HashiCorp Vault.
 - [ ] `p2` - #{ID} - Support key rotation without downtime: keep the old and new key valid for a grace period.
 
 ## settings-service
 
 - Owner: shaneemberton (`gears/settings-service`)
 
-- [ ] `p1` - #{ID} - Add tenant and user settings for Model Factory: default model, allowed models, guardrails and PII redaction on/off, data region.
+<!-- NOTE: do we really need it? If yes, are there missing features? -->
+
+- [ ] `p1` - #{ID} - Add tenant and user settings for Model Factory: default model,
+- [ ] `p1` - #{ID} guardrails and PII redaction on/off, data region.
+
+## graph-storage
+
+- [ ] `p0` - #{ID} - Custom model metadata - deployment status, benchmark results, etc.
 
 ## event-broker
 
 - Owner: Striped Zebra (`gears/system/event-broker`)
 
-- [ ] `p1` - #{ID} - Define typed events for the model lifecycle (model registered, scanned, benchmarked, approved, deployed, failed, retired) so other gears and the console can react.
+- [ ] `p0` - #{ID} - Define typed events for the model lifecycle (model registered, scanned, benchmarked, approved, deployed, failed, retired) so other gears and the console can react.
 - [ ] `p2` - #{ID} - Define events for quota warnings and quota exceeded, for notifications.
 
 ## audit
 
 - Owner: TBD (new)
 
-- [ ] `p1` - #{ID} - Create the audit gear that stores security and business events (who did what and when) with tenant isolation and a search API.
-- [ ] `p1` - #{ID} - Record audit events for model management (register, approve, deploy, retire), API key changes and access denials.
-- [ ] `p2` - #{ID} - Optionally record prompt and response metadata (not content by default) for model calls, with a retention period per tenant.
+- [ ] `p0` - #{ID} - Define audit topic that can be used for model management (register, approve, deploy, retire), API key changes and access denials.
 
 ## task-engine / temporal
 
 - Owner: Artifizer (`gears/task-engine`)
+
+<!-- NOTE: do we use Temporal of Task Engine? -->
 
 - [ ] `p1` - #{ID} - Implement the task-engine gear (docs exist, no code yet): queues, leases, retries, timeouts and progress, as defined in the task-engine PRD.
 - [ ] `p1` - #{ID} - Support long-running jobs (hours) with heartbeats and checkpoints, for model downloads and benchmarks.
@@ -388,23 +422,19 @@ Plugin:
 
 ## types-registry
 
-- Owner: Aviator 5 (`gears/system/types-registry`)
+- Owner: Aviator5 (`gears/system/types-registry`)
 
-- [ ] `p1` - #{ID} - Register GTS schemas for provider settings of each model-gateway plugin, model metadata, deployment specs and Model Ops events.
+- [ ] `p0` - #{ID} - Register GTS schemas for provider settings of each model-gateway plugin, model metadata, deployment specs and Model Ops events.
 
 # Infrastructure
-
-## infrastructure-resource-manager (IRM)
-
-- Owner: parviz-93 (`gears/infrastructure-resource-manager`)
-
-- [ ] `p1` - #{ID} - Implement IRM (docs exist, no code yet) with a Kubernetes adapter that model-deployer uses to create, update and delete GPU workloads.
-- [ ] `p1` - #{ID} - Report GPU pool capacity (free and used GPUs by type) for admission-control and the admin console.
 
 ## vLLM (compute infra, GPU nodes pool)
 
 - Owner: TBD
 
+<!-- NOTE: p0 - vLLM is managed by Infra team entirely -->
+
+- [ ] `p1` - #{ID} - Disable models' code execution
 - [ ] `p1` - #{ID} - Set up the GPU node pool and a standard vLLM Helm chart (model from object storage, GPU settings, metrics, health checks).
 - [ ] `p1` - #{ID} - Decide and set up auth in front of vLLM endpoints (auth proxy, gateway or network policy only), so only oagw can call them.
 - [ ] `p2` - #{ID} - Enable KV cache and prefix caching settings per model and measure the gain.
@@ -414,54 +444,68 @@ Plugin:
 
 - Owner: TBD
 
+<!-- NOTE: p0 - Kubernetes API + Helm is managed by Infra team entirely -->
+
 - [ ] `p1` - #{ID} - Provide a cluster with GPU operator, a namespace per environment and RBAC for model-deployer to install and remove Helm releases.
 
 ## Vault / KMS
 
 - Owner: TBD
 
-- [ ] `p1` - #{ID} - Set up Vault / KMS as the credstore backend for provider keys and Hugging Face tokens.
+- [ ] `p0` - #{ID} - Set up Vault / KMS as the credstore backend for provider keys and Hugging Face tokens.
 
 ## Database
 
 - Owner: TBD
 
-- [ ] `p1` - #{ID} - Provide database schemas, backups and migrations for model-registry, Model Factory backend, task-engine and audit.
+- [ ] `p0` - #{ID} - Deploy database for gears.
+- [ ] `p1` - #{ID} - Set up database replication and backups.
 
 ## Redis
 
 - Owner: TBD (cluster cache/locks via `gears/system/cluster`: Andre Smith)
 
-- [ ] `p1` - #{ID} - Provide Redis for low-latency caches on the inference path (API keys, tenant tree, resolved models, quota counters) and for distributed locks.
+- [ ] `p0` - #{ID} - Provide Redis for low-latency caches on the inference path (API keys, tenant tree, resolved models, quota counters) and for distributed locks.
 
 ## ClickHouse
 
-- Owner: TBD
+- Owner: DevOps
 
-- [ ] `p1` - #{ID} - Store usage and metering records in ClickHouse, with tables and views for usage by tenant, model, API key and day.
+- [ ] `p0` - #{ID} - Store usage and metering records in ClickHouse, with tables and views for usage by tenant, model, API key and day.
 
-## Prometheus
+## Victoria Metrics
 
-- Owner: TBD
+- Owner: DevOps
 
-- [ ] `p1` - #{ID} - Collect metrics from model-gateway, vLLM endpoints and GPU nodes (GPU usage, memory, power in watts).
-- [ ] `p2` - #{ID} - Add alerts for high error rate, high latency, failed deployments and full GPU pool.
+- [ ] `p0` - #{ID} - Collect metrics from model-gateway, vLLM endpoints and GPU nodes (GPU usage, memory, power in watts).
+- [ ] `p1` - #{ID} - Add alerts for high error rate, high latency, failed deployments and full GPU pool.
 
-## Grafana
+## Perses
 
-- Owner: TBD
+- Owner: DevOps
 
-- [ ] `p1` - #{ID} - Create dashboards for inference (requests, latency, tokens per second, errors per model) and for the GPU pool (usage, free capacity).
+- [ ] `p0` - #{ID} - Create dashboards for inference (requests, latency, tokens per second, errors per model) and for the GPU pool (usage, free capacity).
 
 ## Object storage (S3, SeaWeedFS)
 
-- Owner: TBD
+- Owner: DevOps
 
-- [ ] `p1` - #{ID} - Provide buckets for model weights, benchmark results and file-storage, with access only for the gears that need them.
+- [ ] `p0` - #{ID} - Provide buckets for model weights, benchmark results and file-storage, with access only for the gears that need them.
 
-## Loki / OTel / Langfuse
+## Victoria Logs
 
-- Owner: TBD
+- Owner: DevOps
 
-- [ ] `p1` - #{ID} - Collect logs and traces from all Model Factory gears, with one trace id from api-gateway to the vLLM endpoint.
-- [ ] `p2` - #{ID} - Send model call traces (model, tokens, latency, cost) to Langfuse for prompt and quality analysis, without prompt content by default.
+- [ ] `p0` - #{ID} - Collect logs from all Model Factory gears, with one trace id from api-gateway to the vLLM endpoint.
+
+## Victoria Trace
+
+- Owner: DevOps
+
+- [ ] `p0` - #{ID} - Collect traces from all Model Factory gears, with one trace id from api-gateway to the vLLM endpoint.
+
+## Langfuse
+
+- Owner: DevOps
+
+- [ ] `p0` - #{ID} - Send model call traces (model, tokens, latency, cost) to Langfuse for prompt and quality analysis, without prompt content by default.
