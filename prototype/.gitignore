@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Vite's pre-bundle cache lives under node_modules/.vite; keep logs and local env out too
+*.log
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
