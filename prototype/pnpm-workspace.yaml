@@ -1,0 +1,8 @@
+allowBuilds:
+  protobufjs: false
+  vue-demi: false
+minimumReleaseAgeExclude:
+  - '@constructor/globals@0.1.21 || 0.1.22'
+  - '@constructor/icons@3.6.0'
+  - '@constructor/services@1.172.2'
+  - '@constructor/ui@1.966.0'
