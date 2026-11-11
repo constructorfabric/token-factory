@@ -1,0 +1,12 @@
+/* Unlayered, so it sits above the kit's layers. Element-level only where the
+   kit leaves the page itself unstyled. */
+html,
+body,
+#app {
+  block-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--acv-color-surface-secondary);
+}

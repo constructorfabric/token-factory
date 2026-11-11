@@ -1,0 +1,35 @@
+{
+  "name": "hybrid-ai-platform-demo",
+  "private": true,
+  "type": "module",
+  "description": "Token Factory — clickable UI prototype of the instance, tenant and user consoles, on mock data.",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "packageManager": "pnpm@11.23.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@constructor/globals": "^0.1.22",
+    "@constructor/icons": "^3.6.0",
+    "@constructor/services": "1.172.2",
+    "@constructor/ui": "^1.966.0",
+    "pinia": "4.1.0",
+    "vee-validate": "4.15.1",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "postcss": "^8.5.32",
+    "postcss-mixins": "^12.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vue-tsc": "^3.3.14"
+  }
+}
