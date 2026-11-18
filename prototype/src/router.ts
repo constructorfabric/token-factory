@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-rou
 import { tenantById } from '@/state/db';
 import { setupLater } from '@/state/onboarding';
 import { session } from '@/state/session';
+import { screenInScope } from '@/state/scope';
 
 /**
  * Three trees, one per context. A screen is reachable only from the context
@@ -107,13 +108,15 @@ export function homeFor(): string {
 router.beforeEach((to) => {
   if (to.name === 'login') return session.signedIn.value ? homeFor() : true;
   if (!session.signedIn.value) return { name: 'login' };
+  // In v1 mode a screen outside the 5 December scope is not reachable, even by address.
+  if (to.name && !screenInScope(String(to.name))) return homeFor();
   const context = to.matched.find((r) => r.meta.context)?.meta.context;
   if (context && context !== 'personal' && context !== session.current.value?.kind) return homeFor();
   // A tenant not set up yet opens the setup wizard, unless its admin chose to do it later.
   const name = String(to.name ?? '');
   if (name.startsWith('tenant-') && name !== 'tenant-setup') {
     const id = String(to.params.tenantId ?? '');
-    if (tenantById(id)?.setupDone === false && !setupLater.has(id)) return `/t/${id}/setup`;
+    if (tenantById(id)?.setupDone === false && !setupLater.has(id) && screenInScope('tenant-setup')) return `/t/${id}/setup`;
   }
   return true;
 });

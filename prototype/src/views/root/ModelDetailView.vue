@@ -15,6 +15,7 @@ import { GoStatusTag } from '@constructor/ui/status-tag';
 import { GoTable, GoTableCell, GoTableRow } from '@constructor/ui/table';
 import { GoTag } from '@constructor/ui/tag';
 import { computed, reactive, ref, watch } from 'vue';
+import { isV1 } from '@/state/scope';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { IconCircleCheck, IconCircleXmark, IconClockArrowRotateLeft } from '@/components/icons';
 import Card from '@/components/ui/Card.vue';
@@ -55,6 +56,8 @@ const STAGES: { id: AdmissionStage; label: string; prd: string }[] = [
   { id: 'acceptance', label: 'Acceptance tests', prd: 'FR-D3' },
   { id: 'benchmark', label: 'Terminal Bench (eval instance)', prd: 'FR-D4' },
 ];
+// v1 hides benchmarks, Terminal Bench included (product decision, 18 Nov 2026).
+const stagesShown = computed(() => STAGES.filter((s) => !(isV1.value && s.id === 'benchmark')));
 const STATUS = { passed: 'success', failed: 'error', running: 'info', pending: 'disabled', skipped: 'disabled' } as const;
 
 // Promotion needs the GPUs to serve it (FR-C14): a shortfall blocks it.
@@ -144,7 +147,7 @@ const retirement = computed(() => {
   const steps: { text: string; state: 'done' | 'now' | 'next' }[] = [
     { text: `Notice to ${tenantsReached.value} tenants on ${includedIn.value.length} licenses that include it`, state: 'done' },
     replacement
-      ? { text: `Replacement: ${replacement.name}${replacement.scores && Object.keys(replacement.scores).length ? ` — scores ${Object.entries(replacement.scores).map(([k, v]) => `${suiteName(k)} ${v}`).join(', ')}` : ''}`, state: 'done' }
+      ? { text: `Replacement: ${replacement.name}${!isV1.value && replacement.scores && Object.keys(replacement.scores).length ? ` — scores ${Object.entries(replacement.scores).map(([k, v]) => `${suiteName(k)} ${v}`).join(', ')}` : ''}`, state: 'done' }
       : { text: 'Choose a replacement (deprecate again to set one)', state: 'now' },
     { text: replacement ? `${replacement.name} ${replacementLive ? 'generally available' : replacementRolling ? `rolling out (${replacement.ring})` : 'not rolled out yet'}` : 'Roll out the replacement', state: replacementLive || retired ? 'done' : replacement ? 'now' : 'next' },
     { text: aliases.length ? `Move ${aliases.map((a) => a.name).join(', ')} off it — still its primary` : 'No alias points at it any more', state: aliases.length && !retired ? (replacementLive ? 'now' : 'next') : 'done' },
@@ -155,7 +158,7 @@ const retirement = computed(() => {
 
 
 // ---- tabs
-const tab = computed(() => (['usage', 'benchmarks'].includes(String(route.query.tab)) ? String(route.query.tab) : 'overview'));
+const tab = computed(() => ((isV1.value ? ['usage'] : ['usage', 'benchmarks']).includes(String(route.query.tab)) ? String(route.query.tab) : 'overview'));
 const go = (t: string) => router.replace({ query: t === 'overview' ? {} : { tab: t } });
 
 // ---- price: what callers are charged, in platform credits per 1M tokens
@@ -226,7 +229,7 @@ const sRun = useSort(() => runs.value, { suite: (r) => suiteName(r.suiteId), inc
   <div v-if="model">
     <PageHeader :title="model.name" back :description="`${model.provider} · ${model.family} family · version ${model.version}`" @back="router.push('/root/models')">
       <template #actions>
-        <GoButton variant="secondary" size="m" @click="openRun()">Run benchmarks</GoButton>
+        <GoButton v-if="!isV1" variant="secondary" size="m" @click="openRun()">Run benchmarks</GoButton>
         <LifecycleMoveMenu :model="model" />
         <GoButton v-if="model.state === 'ga' && familyDefault && familyDefault.primary !== model.id" variant="secondary" size="m" @click="setDefault">Make {{ familyDefault.name }} point here</GoButton>
       </template>
@@ -239,7 +242,7 @@ const sRun = useSort(() => runs.value, { suite: (r) => suiteName(r.suiteId), inc
     <GoTabs class="tabs">
       <GoTabsItem :active="tab === 'overview'" @click="go('overview')">Overview</GoTabsItem>
       <GoTabsItem :active="tab === 'usage'" @click="go('usage')">Usage</GoTabsItem>
-      <GoTabsItem :active="tab === 'benchmarks'" @click="go('benchmarks')">Benchmarks · {{ new Set(history.map((r) => r.suiteId)).size }}</GoTabsItem>
+      <GoTabsItem v-if="!isV1" :active="tab === 'benchmarks'" @click="go('benchmarks')">Benchmarks · {{ new Set(history.map((r) => r.suiteId)).size }}</GoTabsItem>
     </GoTabs>
 
     <template v-if="tab === 'overview'">
@@ -254,16 +257,16 @@ const sRun = useSort(() => runs.value, { suite: (r) => suiteName(r.suiteId), inc
     </GoMessage>
     <GoMessage v-else-if="['verified', 'approved'].includes(model.state)" variant="success" border rounded class="notice">
       Ready to promote: needs {{ model.gpusRequired }} GPUs, {{ gpuFree }} free
-      <template #addition>Benchmark scores are evidence here; scenario aliases only route to models that pass their scenario.</template>
+      <template v-if="!isV1" #addition>Benchmark scores are evidence here; scenario aliases only route to models that pass their scenario.</template>
     </GoMessage>
-    <GoMessage v-if="isOpenWeight && model.state !== 'discovered' && !model.admission?.benchmark" variant="warning" rounded class="notice">
+    <GoMessage v-if="!isV1 && isOpenWeight && model.state !== 'discovered' && !model.admission?.benchmark" variant="warning" rounded class="notice">
       No benchmark result for this model
     </GoMessage>
 
     <div class="grid">
       <Card v-if="isOpenWeight" title="Admission" subtitle="Each stage must pass before the next runs. License, security and acceptance failures block the model.">
         <ol class="stages">
-          <li v-for="s in STAGES" :key="s.id" class="stage" :class="`stage_${model.admission?.[s.id]?.status ?? 'pending'}`">
+          <li v-for="s in stagesShown" :key="s.id" class="stage" :class="`stage_${model.admission?.[s.id]?.status ?? 'pending'}`">
             <IconCircleCheck v-if="model.admission?.[s.id]?.status === 'passed'" class="stage-icon" aria-hidden="true" />
             <IconCircleXmark v-else-if="model.admission?.[s.id]?.status === 'failed'" class="stage-icon" aria-hidden="true" />
             <IconClockArrowRotateLeft v-else class="stage-icon" aria-hidden="true" />
@@ -328,7 +331,7 @@ const sRun = useSort(() => runs.value, { suite: (r) => suiteName(r.suiteId), inc
       <div class="params"><span class="sub">Request parameters it accepts</span><code v-for="x in profile.params" :key="x" class="param">{{ x }}</code></div>
     </Card>
 
-    <Card title="Candidate vs incumbent" subtitle="Same suites, same run settings. Scores, cost and latency against the model it would replace." flush>
+    <Card v-if="!isV1" title="Candidate vs incumbent" subtitle="Same suites, same run settings. Scores, cost and latency against the model it would replace." flush>
       <template #actions></template>
       <GoTable size="sm">
         <GoTableRow header>

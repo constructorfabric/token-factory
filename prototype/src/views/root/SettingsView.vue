@@ -20,6 +20,7 @@ import { ROOT_TENANT_ID } from '@/data/mock';
 import Card from '@/components/ui/Card.vue';
 import PageHeader from '@/components/ui/PageHeader.vue';
 import { record } from '@/state/db';
+import { isV1, V1_HIDDEN_SETTINGS } from '@/state/scope';
 
 const { notify } = useNotificationsStore();
 const route = useRoute();
@@ -45,7 +46,12 @@ const GROUPS = [
     { id: 'roles', label: 'Roles & permissions', icon: IconUsersNewui },
   ] },
 ];
-const section = computed(() => String(route.query.section ?? 'org-general'));
+// In v1 the email notification settings are hidden; an address to one opens General.
+const shownGroups = computed(() => GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => !(isV1.value && V1_HIDDEN_SETTINGS.has(i.id))) })).filter((g) => g.items.length));
+const section = computed(() => {
+  const asked = String(route.query.section ?? 'org-general');
+  return isV1.value && V1_HIDDEN_SETTINGS.has(asked) ? 'org-general' : asked;
+});
 
 const s = reactive({ domain: 'tf.constructor.tech' });
 
@@ -99,13 +105,13 @@ function save(): void {
 
 <template>
   <div>
-    <PageHeader title="Settings" description="The root tenant’s own settings, and this instance’s domain, mail, tenant licenses, model rollout, gateway behaviour, data retention, updates and roles.">
+    <PageHeader title="Settings" :description="isV1 ? 'The root tenant’s own settings, and this instance’s tenant licenses, updates and roles.' : 'The root tenant’s own settings, and this instance’s domain, mail, tenant licenses, model rollout, gateway behaviour, data retention, updates and roles.'">
       <template #actions><GoButton size="m" @click="save">Save</GoButton></template>
     </PageHeader>
 
     <div class="settings-layout">
       <GoSecondaryNavigation class="settings-nav" aria-label="Settings sections">
-        <GoSecondaryNavigationSection v-for="g in GROUPS" :key="g.title">
+        <GoSecondaryNavigationSection v-for="g in shownGroups" :key="g.title">
           <template #title>{{ g.title }}</template>
           <GoSecondaryNavigationItem v-for="item in g.items" :key="item.id" :component="'a'" :component-props="{ href: `#/root/settings?section=${item.id}` }" :active="section === item.id">
             <template #icon><component :is="item.icon" /></template>
@@ -125,7 +131,7 @@ function save(): void {
             <GoInput id="set-domain" v-model="s.domain" size="m" />
           </GoFormControl>
         </Card>
-        <Card title="Mail server" subtitle="Outgoing email for notifications; each tenant chooses its own sender name and address" class="spaced">
+        <Card v-if="!isV1" title="Mail server" subtitle="Outgoing email for notifications; each tenant chooses its own sender name and address" class="spaced">
           <div class="fields">
             <div class="mail-row">
               <GoFormControl label="SMTP host" label-for="mail-host"><GoInput id="mail-host" v-model="mail.host" size="m" /></GoFormControl>
