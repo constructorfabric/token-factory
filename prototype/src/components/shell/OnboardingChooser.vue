@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { GoButton } from '@constructor/ui/button';
 import { GoDialog, GoDialogWindow } from '@constructor/ui/dialog';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { screenInScope } from '@/state/scope';
 import { db, tenantById } from '@/state/db';
 import { ROOT_TOUR, USER_TOUR, chooser, setupLater, startTour, tenantTour } from '@/state/onboarding';
 import { enterTenant, enterUser, exitTo } from '@/state/session';
@@ -23,6 +25,9 @@ const SCENARIOS = [
   { id: 'org', title: 'Run an organization', who: `Customer Admin of ${tenantById(EXISTING_ORG)?.name}, already in use`, text: 'Departments, users, licenses, models, provider keys, guardrails, tools and reports.', cta: 'Walk through it' },
   { id: 'instance', title: 'Run the instance', who: 'Instance Admin of this Token Factory', text: 'Tenants, the model catalog and lifecycle, benchmarks, routing, GPUs, evaluation, monitoring and settings.', cta: 'Tour the instance console' },
 ] as const;
+
+// The setup wizard is not in the 5 December scope, so v1 offers three ways in.
+const shown = computed(() => SCENARIOS.filter((s) => s.id !== 'setup' || screenInScope('tenant-setup')));
 
 function go(id: (typeof SCENARIOS)[number]['id']): void {
   chooser.open = false;
@@ -49,7 +54,7 @@ function go(id: (typeof SCENARIOS)[number]['id']): void {
     <GoDialogWindow title="Welcome to Token Factory" header-border @close="chooser.open = false">
       <p class="intro">Pick how you want to see it. Each way opens the right console as the right person and shows you around. Come back to this from the instance overview at any time.</p>
       <div class="grid">
-        <button v-for="s in SCENARIOS" :key="s.id" type="button" class="scenario" @click="go(s.id)">
+        <button v-for="s in shown" :key="s.id" type="button" class="scenario" @click="go(s.id)">
           <span class="title">{{ s.title }}</span>
           <span class="who">{{ s.who }}</span>
           <span class="text">{{ s.text }}</span>

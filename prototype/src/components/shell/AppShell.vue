@@ -24,6 +24,9 @@ import { chooserOnFirstStart, startTour, tourOnFirstSignIn } from '@/state/onboa
 import OnboardingChooser from './OnboardingChooser.vue';
 import { licenseOfTenant } from '@/state/tenantLicenses';
 import { NAV } from './nav';
+import ScopeSwitch from './ScopeSwitch.vue';
+import { scope, screenInScope } from '@/state/scope';
+import { homeFor } from '@/router';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,7 +38,10 @@ const sections = computed(() => {
   const t = tenantById(current.value.tenantId);
   // Provider keys only when the tenant license allows own keys.
   const hide = current.value.kind === 'tenant' && t && t.tier !== 'root' && !licenseOfTenant(t)?.ownKeys ? ['tenant-keys'] : [];
-  return NAV[current.value.kind].map((s) => ({ ...s, items: s.items.filter((i) => !hide.includes(i.name)) }));
+  // In v1 mode only the screens the 5 December demo covers stay; a section left empty goes too.
+  return NAV[current.value.kind]
+    .map((s) => ({ ...s, items: s.items.filter((i) => !hide.includes(i.name) && screenInScope(i.name)) }))
+    .filter((s) => s.items.length > 0);
 });
 const tenant = computed(() => tenantById(current.value?.tenantId));
 
@@ -99,6 +105,12 @@ function leaveAll(): void {
 
 const { notify } = useNotificationsStore();
 
+// Switching to v1 while on a screen outside it goes to the home of this console.
+watch(() => scope.mode, () => {
+  const name = String(route.name ?? '');
+  if (name && !screenInScope(name)) void router.replace(homeFor());
+});
+
 // A user's first sign-in starts the guided tour of their pages.
 watch(() => session.current.value, (c) => {
   if (c?.kind === 'user' && c.userId) setTimeout(() => tourOnFirstSignIn(c.userId!), 400);
@@ -158,8 +170,8 @@ function logout(): void {
         </GoMainNavigation>
         <div class="account-slot">
 
-          <NotificationBell v-if="current?.kind === 'root'" scope="root" all-to="/root/notifications" placement="up" labelled class="bell-row" />
-          <NotificationBell v-else-if="current?.kind === 'tenant'" :scope="current.tenantId" :all-to="`/t/${current.tenantId}/notifications`" placement="up" labelled class="bell-row" />
+          <NotificationBell v-if="current?.kind === 'root' && screenInScope('root-notifications')" scope="root" all-to="/root/notifications" placement="up" labelled class="bell-row" />
+          <NotificationBell v-else-if="current?.kind === 'tenant' && screenInScope('tenant-notifications')" :scope="current.tenantId" :all-to="`/t/${current.tenantId}/notifications`" placement="up" labelled class="bell-row" />
           <div class="account-row">
             <div class="account-menu">
               <GoDropdownMenuPopover position="top-left" aria-label="Account" :expand-icon="false">
@@ -224,6 +236,9 @@ function logout(): void {
                 <GoTag v-if="session.impersonating.value" size="s" color="orange" variant="strong">Impersonated</GoTag>
               </template>
             </GoNavBreadcrumbs>
+          </template>
+          <template #end>
+            <ScopeSwitch />
           </template>
         </GoNav>
         <main class="content">

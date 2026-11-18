@@ -39,6 +39,15 @@ The first time the instance console opens, it offers four ways to see the produc
 
 The first three open another console as an **impersonation**: an orange banner at the top shows who you are acting as, and **Exit to root console** brings you back. Start the scenarios again any time with **Start onboarding** on the instance overview. The chooser opens by itself only once per browser; to see it again on start, clear the site's data for `localhost:5180`.
 
+## Scope: v1 or Future
+
+The **Scope** switch at the top right of every screen picks which product you see:
+
+- **Future** (the default) shows everything designed so far, Stage 1 to Stage 4.
+- **v1 · 5 Dec** shows only what the first release covers for the community demo on 5 December 2026 (PRD Stage 1, "First tokens"). Screens that need a backend capability Stage 1 does not build are hidden from the menu, and their addresses lead back to the console's overview; screens that need nothing from the backend, such as the documentation and the agent setup, stay. A few more are cut or kept by product decision: v1 also hides deployments, benchmarks (including everything about them on a model's page), aliases and routing, providers, evaluation, the lifecycle board, and the mail, notification, configuration, model rollout, gateway and data retention settings, and it keeps departments.
+
+The choice is kept per browser. The list of v1 screens and hidden settings sections, with the requirement or decision behind each, is in `src/state/scope.ts`.
+
 ## What is in it
 
 **Instance console** (`/root`)
