@@ -32,6 +32,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import { fmtAgo, fmtCredits, fmtDate, fmtDateTime, fmtInt } from '@/lib/format';
 import { db, record, tenantById } from '@/state/db';
 import { activePeopleSource, integrationsFor, type Integration } from '@/state/integrations';
+import { isV1, V1_INTEGRATIONS } from '@/state/scope';
 import { session } from '@/state/session';
 
 const route = useRoute();
@@ -41,7 +42,9 @@ const props = defineProps<{ embeddedTenantId?: string; embeddedSection?: string 
 const embedded = computed(() => !!props.embeddedTenantId);
 const tenantId = props.embeddedTenantId ?? String(route.params.tenantId ?? ROOT_TENANT_ID);
 const tenant = computed(() => tenantById(tenantId));
-const integrations = integrationsFor(tenantId);
+const allIntegrations = integrationsFor(tenantId);
+// v1 offers only Constructor Platform and BambooHR; Future shows the whole catalog.
+const integrations = computed(() => (isV1.value ? allIntegrations.filter((i) => V1_INTEGRATIONS.has(i.id)) : allIntegrations));
 
 const GROUPS = [
   { title: 'Organization', items: [
@@ -98,7 +101,7 @@ function requestChange(): void {
 type Filter = 'all' | 'connected' | 'available';
 const filter = ref<Filter>('all');
 const isOn = (i: Integration) => i.status !== 'available';
-const shown = computed(() => integrations.filter((i) => filter.value === 'all' || (filter.value === 'connected' ? isOn(i) : !isOn(i))));
+const shown = computed(() => integrations.value.filter((i) => filter.value === 'all' || (filter.value === 'connected' ? isOn(i) : !isOn(i))));
 // The catalog is split by what an integration is for, in this order.
 const KIND_INFO: { kind: Integration['kind']; title: string; text: string }[] = [
   { kind: 'models', title: 'Model sources', text: 'Where open-weight models are downloaded from for admission.' },
@@ -108,10 +111,10 @@ const KIND_INFO: { kind: Integration['kind']; title: string; text: string }[] = 
   { kind: 'security', title: 'Security & audit', text: 'Stream the audit log to your SIEM.' },
 ];
 const kindFilter = ref<'all' | Integration['kind']>('all');
-const kindsPresent = computed(() => KIND_INFO.filter((k) => integrations.some((i) => i.kind === k.kind)));
+const kindsPresent = computed(() => KIND_INFO.filter((k) => integrations.value.some((i) => i.kind === k.kind)));
 const kindCount = (k: 'all' | Integration['kind']) => shown.value.filter((i) => k === 'all' || i.kind === k).length;
 const groupsShown = computed(() => KIND_INFO.filter((k) => kindFilter.value === 'all' || k.kind === kindFilter.value).map((k) => ({ ...k, items: shown.value.filter((i) => i.kind === k.kind) })).filter((g) => g.items.length));
-const count = (f: Filter) => integrations.filter((i) => f === 'all' || (f === 'connected' ? isOn(i) : !isOn(i))).length;
+const count = (f: Filter) => integrations.value.filter((i) => f === 'all' || (f === 'connected' ? isOn(i) : !isOn(i))).length;
 const KIND = { users: 'Users & organization', identity: 'Identity provisioning', models: 'Model source', observability: 'Observability', security: 'Security & audit' };
 // User sources sync users on a schedule; tools receive what Token Factory sends.
 const isSource = (i: Integration) => i.kind === 'users' || i.kind === 'identity';

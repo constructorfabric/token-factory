@@ -105,6 +105,13 @@ export const V1_SCREENS = new Set<string>([
  */
 export const V1_HIDDEN_SETTINGS = new Set<string>(['org-notifications', 'instance', 'rollout', 'gateway', 'data']);
 
+/**
+ * Integrations offered in v1 (product decision, 18 Nov 2026): people and
+ * departments from Constructor Platform or BambooHR. Every other integration
+ * in the catalog is hidden in v1.
+ */
+export const V1_INTEGRATIONS = new Set<string>(['constructor-platform', 'bamboohr']);
+
 /** True when the screen with this route name is shown in the current mode. */
 export function screenInScope(name: string): boolean {
   return scope.mode === 'future' || V1_SCREENS.has(name);
