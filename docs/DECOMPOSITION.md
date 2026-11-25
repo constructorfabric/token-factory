@@ -374,7 +374,7 @@ Plugin:
 
 - Owner: striped-zebra (`gears/system/oagw`)
 
-- [ ] `p0` - [#119](https://github.com/constructorfabric/token-factory/issues/119) - Support long-lived streaming responses (SSE) from providers and vLLM endpoints without timeouts or buffering.
+- [x] `p0` - [#119](https://github.com/constructorfabric/token-factory/issues/119) - Support long-lived streaming responses (SSE) from providers and vLLM endpoints without timeouts or buffering.
 - [ ] `p1` - [#120](https://github.com/constructorfabric/token-factory/issues/120) - Let model-deployer add and remove approved destinations for vLLM endpoints at runtime.
 - [ ] `p2` - [#121](https://github.com/constructorfabric/token-factory/issues/121) - Add per-destination circuit breakers, so model-router can skip a failing provider.
 
